@@ -1,0 +1,12 @@
+[theme]
+# Color principal (botones, barras deslizantes, etc.)
+primaryColor="#E63946"
+
+# Color de fondo de la página
+backgroundColor="#F1FAEE"
+
+# Color de fondo de la barra lateral (donde irá tu nombre)
+secondaryBackgroundColor="#A8DADC"
+
+# Color del texto
+textColor="#1D3557"
