@@ -94,38 +94,55 @@ elif st.session_state.paso == 2:
     if col_at.button("⬅️ Volver"): st.session_state.paso = 1; st.rerun()
     if col_sig.button("Siguiente: Porciones ➡️"): st.session_state.paso = 3; st.rerun()
 
-# --- PASO 3: RENDIMIENTO Y PORCIÓN ---
+# --- PASO 3: RENDIMIENTO Y PORCIONES ---
 elif st.session_state.paso == 3:
     st.subheader("Paso 3: Rendimiento y Porciones")
-    st.write("Diferenciemos el total producido de la porción sugerida.")
+    st.write("Definamos cuánto producto obtuviste y cuál es la porción sugerida.")
+
+    st.markdown("#### 📦 Sobre el Producto Terminado")
+    # 1. ¿Cuántos productos salieron?
+    st.session_state.num_unidades = st.number_input(
+        "¿Cuántos productos salieron en total?", 
+        min_value=1, 
+        value=st.session_state.get('num_unidades', 1),
+        step=1,
+        help="Ej: Si de la olla sacaste 20 mermeladas, pon 20."
+    )
     
-    # 1. ¿Cuánto salió en total?
-    st.session_state.peso_total_receta = st.number_input(
-        "⚖️ ¿Cuánto pesa tu producto en total? (Peso Neto en gramos)", 
+    # 2. ¿Cuánto pesa cada producto?
+    st.session_state.peso_por_unidad = st.number_input(
+        "¿Cuánto pesa cada producto? (Peso neto en gramos o ml)", 
         min_value=1.0, 
-        value=500.0,
+        value=st.session_state.get('peso_por_unidad', 250.0),
         step=10.0,
-        help="Ej: Si llenaste un frasco de mermelada de 250g, pon 250."
+        help="Ej: Si la mermelada pesa 250g, pon 250."
     )
-    
-    # 2. ¿Cuánto es la porción?
+
+    st.markdown("#### 🥄 Sobre la Porción")
+    # 3. El peso de la porción (necesario para el cálculo de los sellos)
     st.session_state.peso_porcion = st.number_input(
-        "🥄 Tamaño de la porción (en gramos)", 
+        "¿Cuánto pesa 1 porción? (en gramos o ml)", 
         min_value=1.0, 
-        value=15.0,
+        value=st.session_state.get('peso_porcion', 15.0),
         step=1.0,
-        help="Ej: Para mermeladas la porción suele ser 15g (1 cucharadita)."
+        help="Ej: 15g para mermeladas."
     )
     
-    # 3. Descripción
+    # 4. Medida casera (El texto que saldrá en la etiqueta)
     st.session_state.desc_porcion = st.text_input(
-        "✍️ Descripción de la porción", 
-        value="1 cucharadita"
+        "Medida casera para su porción", 
+        value=st.session_state.get('desc_porcion', "1 cucharadita"),
+        help="Ej: 1 cucharadita, 1 rebanada, 1 unidad."
     )
+
+    # --- CÁLCULOS AUTOMÁTICOS ---
+    # Guardamos el peso total para la memoria interna
+    st.session_state.peso_total_receta = st.session_state.num_unidades * st.session_state.peso_por_unidad
     
-    # Cálculo automático de porciones para mostrar al usuario
-    num_porciones_calc = st.session_state.peso_total_receta / st.session_state.peso_porcion
-    st.info(f"💡 Tu envase tendrá aproximadamente **{num_porciones_calc:.1f}** porciones.")
+    # Calculamos cuántas porciones rinde un solo producto
+    porciones_calc = st.session_state.peso_por_unidad / st.session_state.peso_porcion
+    
+    st.info(f"💡 **Resumen:** Hiciste {st.session_state.num_unidades} productos de {st.session_state.peso_por_unidad}g/ml. Cada producto tendrá aproximadamente **{porciones_calc:.1f} porciones**.")
 
     st.write("---")
     col_at, col_sig = st.columns(2)
