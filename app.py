@@ -164,7 +164,8 @@ elif st.session_state.paso == 4:
         'hc': find_col('Hidratos'), 'az': find_col('Azúcar'), 'sod': find_col('Sodio')
     }
 
-    totales = {k: 0.0 for k in cols.keys()}
+    # 1. Sumamos todos los nutrientes de la olla gigante
+    totales_olla = {k: 0.0 for k in cols.keys()}
     for item in st.session_state.carrito:
         cant = st.session_state.cantidades[item]
         fila = df_ingredientes[df_ingredientes["Ingrediente"] == item]
@@ -173,24 +174,33 @@ elif st.session_state.paso == 4:
                 if col_name:
                     valor = pd.to_numeric(fila[col_name].values[0], errors='coerce')
                     if np.isnan(valor): valor = 0.0
-                    totales[k] += (valor / 100) * cant
+                    totales_olla[k] += (valor / 100) * cant
 
-    peso_total = st.session_state.num_porciones * st.session_state.peso_porcion
+    # 2. Recuperamos los datos del Paso 3
+    unidades = st.session_state.get('num_unidades', 1)
+    peso_unidad = st.session_state.get('peso_por_unidad', 100.0)
+    peso_porcion = st.session_state.get('peso_porcion', 15.0)
     
-    def calc(val): 
-        if peso_total == 0: return 0.0, 0.0
-        p100 = (val / peso_total * 100)
-        p_porc = (val / st.session_state.num_porciones)
+    # 3. Matemática correcta
+    peso_total_olla = unidades * peso_unidad
+    porciones_por_envase = peso_unidad / peso_porcion
+    
+    def calc(val_total_olla): 
+        if peso_total_olla == 0: return 0.0, 0.0
+        # Nutrientes en 100g de producto final
+        p100 = (val_total_olla / peso_total_olla) * 100
+        # Nutrientes en 1 porción
+        p_porc = (val_total_olla / peso_total_olla) * peso_porcion
         return p100, p_porc
 
-    res = {k: calc(v) for k, v in totales.items()}
+    res = {k: calc(v) for k, v in totales_olla.items()}
 
     # TABLA HTML
     st.markdown(f"""
     <div style="font-family: Arial; border: 2px solid black; padding: 15px; width: 350px; background: white; color: black;">
         <h3 style="text-align: center; border-bottom: 2px solid black; margin: 0 0 10px 0;">INFORMACIÓN NUTRICIONAL</h3>
-        <p style="margin: 2px 0;"><b>Porción:</b> {st.session_state.desc_porcion} ({st.session_state.peso_porcion}g)</p>
-        <p style="margin: 2px 0;"><b>Porciones por envase:</b> Aprox. {st.session_state.num_porciones}</p>
+        <p style="margin: 2px 0;"><b>Porción:</b> {st.session_state.desc_porcion} ({peso_porcion}g)</p>
+        <p style="margin: 2px 0;"><b>Porciones por envase:</b> Aprox. {porciones_por_envase:.0f}</p>
         <table style="width: 100%; border-collapse: collapse; margin-top: 10px; color: black;">
             <tr style="border-bottom: 1px solid black;">
                 <th style="text-align: left;"></th>
@@ -215,6 +225,7 @@ elif st.session_state.paso == 4:
     # SELLOS
     st.write("### 🛑 Sellos correspondientes:")
     sellos_activos = []
+    # Usamos los valores por 100g para determinar los sellos
     if res['ener'][0] > 275: sellos_activos.append("CALORÍAS")
     if res['az'][0] > 10: sellos_activos.append("AZÚCARES")
     if res['g_sat'][0] > 4: sellos_activos.append("GRASAS SATURADAS")
@@ -234,12 +245,13 @@ elif st.session_state.paso == 4:
             cols_sellos[i].image(urls[s], width=100)
 
     st.write("---")
-    # BOTÓN FINAL CORREGIDO
+    # BOTÓN FINAL
     if st.button("🔄 Empezar Nueva Receta"):
         st.session_state.paso = 1
         st.session_state.carrito = []
         st.session_state.cantidades = {}
-        st.session_state.num_porciones = 1
-        st.session_state.peso_porcion = 100.0
-        st.session_state.desc_porcion = "1 porción"
+        # Limpiamos las nuevas variables también
+        for key in ['num_unidades', 'peso_por_unidad', 'peso_porcion', 'desc_porcion']:
+            if key in st.session_state:
+                del st.session_state[key]
         st.rerun()
