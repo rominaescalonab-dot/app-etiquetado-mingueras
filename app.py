@@ -56,12 +56,40 @@ if st.session_state.paso == 1:
             st.session_state.paso = 2
             st.rerun()
 
-# --- PASO 2: GRAMOS ---
+# --- PASO 2: CANTIDADES (Gramos o ml) ---
 elif st.session_state.paso == 2:
     st.subheader("Paso 2: ¿Cuánto usaste?")
+    st.write("Ingresa las cantidades para cada ingrediente:")
+
     for item in st.session_state.carrito:
-        st.session_state.cantidades[item] = st.number_input(f"Gramos/ml de {item}:", min_value=0.0, value=float(st.session_state.cantidades.get(item, 0.0)), step=5.0)
-    
+        # Buscamos el ingrediente en el Excel
+        fila = df_ingredientes[df_ingredientes["Ingrediente"] == item]
+        unidad = "gramos" # Por defecto
+        
+        # Verificamos la columna 'Tipo'
+        if not fila.empty and 'Tipo' in df_ingredientes.columns:
+            tipo_valor = str(fila['Tipo'].values[0]).lower().strip()
+            if "liquido" in tipo_valor or "líquido" in tipo_valor:
+                unidad = "ml"
+        
+        # El número: Forzamos a que sea INT (Entero) para que NO salgan los decimales
+        valor_guardado = st.session_state.cantidades.get(item, 0)
+        
+        st.session_state.cantidades[item] = st.number_input(
+            f"Cantidad de {item} ({unidad}):", 
+            min_value=0, 
+            value=int(valor_guardado), 
+            step=1,
+            format="%d",
+            key=f"input_new_{item}"
+        )
+        
+        # Punto de mil chileno (Ayuda visual)
+        if st.session_state.cantidades[item] >= 1000:
+            formateado = f"{st.session_state.cantidades[item]:,}".replace(",", ".")
+            st.caption(f"✅ Registrado: {formateado} {unidad}")
+
+    st.write("---")
     col_at, col_sig = st.columns(2)
     if col_at.button("⬅️ Volver"): st.session_state.paso = 1; st.rerun()
     if col_sig.button("Siguiente: Porciones ➡️"): st.session_state.paso = 3; st.rerun()
