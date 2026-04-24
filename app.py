@@ -3,9 +3,18 @@ import pandas as pd
 import numpy as np
 
 # Configuración de la página
-st.set_page_config(page_title="App Mingas", page_icon="👩‍🍳")
-st.title("Calculadora de Sellos - Mingas 👩‍🍳")
+st.set_page_config(page_title="Etiquetado nutricional", page_icon="👩‍🍳")
+st.title("🍎 Calculadora de Etiquetado Nutricional y Sellos")
 
+# --- CRÉDITOS EN LA BARRA LATERAL ---
+with st.sidebar:
+    st.markdown("### 👩‍⚕️ Desarrollado por:")
+    st.markdown("**Romina Escalona**")
+    st.markdown("Practicante Nutrición y Dietética")
+    st.markdown("Universidad de Chile, 2026")
+    st.write("---")
+    st.caption("Proyecto de apoyo al etiquetado para Mingueras.")
+    
 # --- CARGAR BASE DE DATOS ---
 @st.cache_data
 def cargar_datos():
