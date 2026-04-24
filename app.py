@@ -1,7 +1,32 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+# --- CANDADO DE SEGURIDAD VIP (ACCESO INDIVIDUAL) ---
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
 
+if not st.session_state.autenticado:
+    st.warning("🔒 Acceso exclusivo. Ingresa tus credenciales para continuar.")
+    
+    # Ahora pedimos dos cosas: Usuario y Clave
+    usuario = st.text_input("Nombre de usuario:")
+    clave = st.text_input("Contraseña:", type="password")
+    
+    if st.button("Entrar"):
+        # Llamamos a nuestra lista de invitados desde la caja fuerte
+        lista_usuarios = st.secrets["passwords"]
+        
+        # 1. Revisa si el usuario escrito existe en la lista
+        # 2. Si existe, revisa si la clave coincide con la de ese usuario
+        if usuario in lista_usuarios and lista_usuarios[usuario] == clave:
+            st.session_state.autenticado = True
+            st.success(f"¡Bienvenida {usuario}! Desbloqueando la calculadora...")
+            st.rerun()
+        else:
+            st.error("Usuario o contraseña incorrecta ❌")
+            
+    st.stop() 
+# --- A PARTIR DE AQUÍ EMPIEZA TU APP NORMAL ---
 # Configuración de la página
 st.set_page_config(page_title="Etiquetado nutricional", page_icon="👩‍🍳")
 st.title("🍎 Calculadora de Etiquetado Nutricional y Sellos")
